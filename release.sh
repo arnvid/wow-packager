@@ -2375,6 +2375,75 @@ if [[ -n "$license" && ! -f "$topdir/$license" && -n "$slug" ]]; then
 fi
 
 ###
+### Download external addons
+###
+
+declare -A WoWI=(
+	["BadBoy"]=8736
+	["BadBoy_CCleaner"]=13526
+	["BadBoy_Guilded"]=16951
+	["Bartender4"]=11190
+	["Clique"]=5108
+	["KNP"]=19390
+	["Masque"]=12097
+	["PhanxChat"]=6323
+	["Raven"]=18242
+)
+declare -A CurseForge=(
+	["Grid2"]=15226
+	["Skada"]=17718
+	["MSBT"]=2450
+)
+declare -A extFolders=(
+	["BadBoy"]="BadBoy"
+	["BadBoy_CCleaner"]="BadBoy_CCleaner"
+	["BadBoy_Guilded"]="BadBoy_Guilded"
+	["Bartender4"]="Bartender4"
+	["Clique"]="Clique"
+	["Grid2"]="Grid2 Grid2LDB Grid2Options Grid2RaidDebuffs Grid2RaidDebuffsOptions"
+	["KNP"]="Kui_Media Kui_Nameplates Kui_Nameplates_Core Kui_Nameplates_Core_Config"
+	["Masque"]="Masque"
+	["MSBT"]="MikScrollingBattleText MSBTOptions"
+	["PhanxChat"]="PhanxChat"
+	["Raven"]="Raven Raven_Options"
+	["Skada"]="Skada"
+)
+
+for addon in "${!WoWI[@]}"; do
+    echo "$addon";
+    url=$(curl -s "https://api.mmoui.com/v3/game/WOW/filedetails/${WoWI[$addon]}.json" | jq '.[0].UIDownload')
+
+    wget -q -O "$releasedir/$addon.zip" "${url//\"}"
+    unzip -q "$releasedir/$addon.zip" -d "$releasedir"
+	contents="$contents ${extFolders[$addon]}"
+    rm "$releasedir/$addon.zip"
+done
+
+for addon in "${!CurseForge[@]}"; do
+	echo "$addon";
+	addonDir="$releasedir/$addon"
+	curl -s "https://addons-ecs.forgesvc.net/api/v2/addon/${CurseForge[$addon]}" -o "$addonDir.json"
+
+	url=
+	length=$(jq ".latestFiles | length" "$addonDir.json")
+	for ((i=0; i<length; ++i)); do
+		releaseType=$(jq ".latestFiles[$i].releaseType" "$addonDir.json")
+		gameVersionFlavor=$(jq ".latestFiles[$i].gameVersionFlavor" "$addonDir.json")
+		isAlternate=$(jq ".latestFiles[$i].isAlternate" "$addonDir.json")
+
+	    if [[ $releaseType = 1 && ${gameVersionFlavor//\"} = wow_retail && $isAlternate = false ]]; then
+	    	url=$(jq ".latestFiles[$i].downloadUrl" "$addonDir.json")
+	    	break
+	    fi
+	done
+
+	wget -q -O "$addonDir.zip" "${url//\"}"
+	unzip -q "$addonDir.zip" -d "$releasedir"
+	contents="$contents ${extFolders[$addon]}"
+	rm "$releasedir/$addon.zip"
+done
+
+###
 ### Process .pkgmeta to perform move-folders actions.
 ###
 
