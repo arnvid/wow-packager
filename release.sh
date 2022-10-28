@@ -2388,9 +2388,8 @@ declare -A WoWI=(
 	["Masque"]=12097
 	["Raven"]=18242
 )
-declare -A CurseForge=(
-	["Grid2"]=15226
-	["Skada"]=17718
+declare -A Wago=(
+	["Grid2"]="grid2"
 )
 declare -A extFolders=(
 	["Aurora"]="Aurora"
@@ -2402,41 +2401,40 @@ declare -A extFolders=(
 	["KNP"]="Kui_Media Kui_Nameplates Kui_Nameplates_Core Kui_Nameplates_Core_Config"
 	["Masque"]="Masque"
 	["Raven"]="Raven Raven_Options"
-	["Skada"]="Skada"
 )
 
+addonDir=
 for addon in "${!WoWI[@]}"; do
     echo "$addon";
+	addonDir="$releasedir/$addon"
     url=$(curl -s "https://api.mmoui.com/v3/game/WOW/filedetails/${WoWI[$addon]}.json" | jq '.[0].UIDownload')
 
-    wget -q -O "$releasedir/$addon.zip" "${url//\"}"
-    unzip -q "$releasedir/$addon.zip" -d "$releasedir"
+    wget -q -O "$addonDir.zip" "${url//\"}"
+    unzip -q "$addonDir.zip" -d "$releasedir"
 	contents="$contents ${extFolders[$addon]}"
-    rm "$releasedir/$addon.zip"
+    rm "$addonDir.zip"
 done
 
-for addon in "${!CurseForge[@]}"; do
+for addon in "${!Wago[@]}"; do
 	echo "$addon";
 	addonDir="$releasedir/$addon"
-	curl -s "https://addons-ecs.forgesvc.net/api/v2/addon/${CurseForge[$addon]}" -o "$addonDir.json"
 
-	url=
-	length=$(jq ".latestFiles | length" "$addonDir.json")
-	for ((i=0; i<length; ++i)); do
-		releaseType=$(jq ".latestFiles[$i].releaseType" "$addonDir.json")
-		gameVersionFlavor=$(jq ".latestFiles[$i].gameVersionFlavor" "$addonDir.json")
-		isAlternate=$(jq ".latestFiles[$i].isAlternate" "$addonDir.json")
+	curl -f \
+      -H "Authorization: Bearer $WAGO_API_KEY" \
+      -H "accept: application/json" \
+      "https://addons.wago.io/api/external/addons/${Wago[$addon]}?game_version=retail" -o "$addonDir.json"
 
-	    if [[ $releaseType = 1 && ${gameVersionFlavor//\"} = wow_retail && $isAlternate = false ]]; then
-	    	url=$(jq ".latestFiles[$i].downloadUrl" "$addonDir.json")
-	    	break
-	    fi
-	done
+	url=$(jq ".recent_release.stable.download_link" "$addonDir.json")
+	curl -f \
+      -H "Authorization: Bearer $WAGO_API_KEY" \
+      -H "accept: application/json" \
+      "${url//\"}" -o "${addonDir}.html"
 
-	wget -q -O "$addonDir.zip" "${url//\"}"
+	download=$(grep -Po "(?<=href=\")[^\"]+" "${addonDir}.html")
+	wget -q -O "$addonDir.zip" "${download//\"}"
 	unzip -q "$addonDir.zip" -d "$releasedir"
 	contents="$contents ${extFolders[$addon]}"
-	rm "$releasedir/$addon.zip"
+	rm "$addonDir.zip"
 done
 
 ###
