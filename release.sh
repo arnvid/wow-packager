@@ -2394,15 +2394,15 @@ declare -A GitHub=(
 	["KNP"]="kesava-wow/kuinameplates2"
 )
 declare -A extFolders=(
-	["Aurora"]="Aurora"
-	["BadBoy"]="BadBoy"
-	["BadBoy_CCleaner"]="BadBoy_CCleaner"
-	["BadBoy_Guilded"]="BadBoy_Guilded"
-	["Bartender4"]="Bartender4"
-	["Grid2"]="Grid2 Grid2LDB Grid2Options Grid2RaidDebuffs Grid2RaidDebuffsOptions"
-	["KNP"]="Kui_Media Kui_Nameplates Kui_Nameplates_Core Kui_Nameplates_Core_Config"
-	["Masque"]="Masque"
-	["Raven"]="Raven Raven_Options"
+	["Aurora"]=("Aurora")
+	["BadBoy"]=("BadBoy")
+	["BadBoy_CCleaner"]=("BadBoy_CCleaner")
+	["BadBoy_Guilded"]=("BadBoy_Guilded")
+	["Bartender4"]=("Bartender4")
+	["Grid2"]=("Grid2" "Grid2LDB" "Grid2Options" "Grid2RaidDebuffs" "Grid2RaidDebuffsOptions")
+	["KNP"]=("Kui_Media" "Kui_Nameplates" "Kui_Nameplates_Core" "Kui_Nameplates_Core_Config")
+	["Masque"]=("Masque")
+	["Raven"]=("Raven" "Raven_Options")
 )
 
 addonDir=
@@ -2413,7 +2413,7 @@ for addon in "${!WoWI[@]}"; do
 
     wget -q -O "$addonDir.zip" "${url//\"}"
     unzip -q "$addonDir.zip" -d "$releasedir"
-	contents="$contents ${extFolders[$addon]}"
+	zip_root_dirs+=("${extFolders[$addon]}")
     rm "$addonDir.zip"
 done
 
@@ -2421,13 +2421,13 @@ for addon in "${!Wago[@]}"; do
 	echo "$addon";
 	addonDir="$releasedir/$addon"
 
-	curl -f \
+	curl -s -f \
       -H "Authorization: Bearer $WAGO_API_KEY" \
       -H "accept: application/json" \
       "https://addons.wago.io/api/external/addons/${Wago[$addon]}?game_version=retail" -o "$addonDir.json"
 
 	url=$(jq ".recent_release.stable.download_link" "$addonDir.json")
-	curl -f \
+	curl -s -f \
       -H "Authorization: Bearer $WAGO_API_KEY" \
       -H "accept: application/json" \
       "${url//\"}" -o "${addonDir}.html"
@@ -2435,7 +2435,7 @@ for addon in "${!Wago[@]}"; do
 	download=$(grep -Po "(?<=href=\")[^\"]+" "${addonDir}.html")
 	wget -q -O "$addonDir.zip" "${download//\"}"
 	unzip -q "$addonDir.zip" -d "$releasedir"
-	contents="$contents ${extFolders[$addon]}"
+	zip_root_dirs+=("${extFolders[$addon]}")
 	rm "$addonDir.zip"
 done
 
@@ -2444,23 +2444,19 @@ for addon in "${!GitHub[@]}"; do
 	addonDir="$releasedir/$addon"
 
     version=$(curl -s "https://api.github.com/repos/${GitHub[$addon]}/releases/latest" | jq -r '.name')
-    wget "https://github.com/${GitHub[$addon]}/releases/download/$version/release.json"
+    wget -q "https://github.com/${GitHub[$addon]}/releases/download/$version/release.json"
 
     fileName=
     while read -r i; do
         flavor=$(jq -r ".metadata[].flavor" <<< "$i")
-        echo "$flavor"
-
         if [ "$flavor" == "mainline" ]; then
             fileName=$(jq -r ".filename" <<< "$i")
         fi
     done < <(jq -c '.releases[]' release.json)
-    echo "$fileName"
-
 
     wget -q -O "$addonDir.zip" "https://github.com/${GitHub[$addon]}/releases/download/$version/$fileName"
 	unzip -q "$addonDir.zip" -d "$releasedir"
-	contents="$contents ${extFolders[$addon]}"
+	zip_root_dirs+=("${extFolders[$addon]}")
 	rm "$addonDir.zip"
 done
 
