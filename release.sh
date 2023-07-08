@@ -2394,15 +2394,15 @@ declare -A GitHub=(
 	["KNP"]="kesava-wow/kuinameplates2"
 )
 declare -A extFolders=(
-	["Aurora"]=("Aurora")
-	["BadBoy"]=("BadBoy")
-	["BadBoy_CCleaner"]=("BadBoy_CCleaner")
-	["BadBoy_Guilded"]=("BadBoy_Guilded")
-	["Bartender4"]=("Bartender4")
-	["Grid2"]=("Grid2" "Grid2LDB" "Grid2Options" "Grid2RaidDebuffs" "Grid2RaidDebuffsOptions")
-	["KNP"]=("Kui_Media" "Kui_Nameplates" "Kui_Nameplates_Core" "Kui_Nameplates_Core_Config")
-	["Masque"]=("Masque")
-	["Raven"]=("Raven" "Raven_Options")
+	["Aurora"]="Aurora"
+	["BadBoy"]="BadBoy"
+	["BadBoy_CCleaner"]="BadBoy_CCleaner"
+	["BadBoy_Guilded"]="BadBoy_Guilded"
+	["Bartender4"]="Bartender4"
+	["Grid2"]="Grid2 Grid2LDB Grid2Options Grid2RaidDebuffs Grid2RaidDebuffsOptions"
+	["KNP"]="Kui_Media Kui_Nameplates Kui_Nameplates_Core Kui_Nameplates_Core_Config"
+	["Masque"]="Masque"
+	["Raven"]="Raven Raven_Options"
 )
 
 addonDir=
