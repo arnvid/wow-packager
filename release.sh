@@ -2386,6 +2386,92 @@ if [[ -n "$license" && ! -f "$topdir/$license" && -n "$slug" ]]; then
 fi
 
 ###
+### Download external addons
+###
+
+declare -A WoWI=(
+	["Aurora"]=18589
+	["BadBoy"]=8736
+	["BadBoy_CCleaner"]=13526
+	["BadBoy_Guilded"]=16951
+	["Bartender4"]=11190
+	["Masque"]=12097
+	["Raven"]=18242
+)
+declare -A Wago=(
+	["Grid2"]="grid2"
+)
+declare -A GitHub=(
+	["KNP"]="kesava-wow/kuinameplates2"
+)
+declare -A extFolders=(
+	["Aurora"]="Aurora"
+	["BadBoy"]="BadBoy"
+	["BadBoy_CCleaner"]="BadBoy_CCleaner"
+	["BadBoy_Guilded"]="BadBoy_Guilded"
+	["Bartender4"]="Bartender4"
+	["Grid2"]="Grid2 Grid2LDB Grid2Options Grid2RaidDebuffs Grid2RaidDebuffsOptions"
+	["KNP"]="Kui_Media Kui_Nameplates Kui_Nameplates_Core Kui_Nameplates_Core_Config"
+	["Masque"]="Masque"
+	["Raven"]="Raven Raven_Options"
+)
+
+addonDir=
+for addon in "${!WoWI[@]}"; do
+    echo "$addon";
+	addonDir="$releasedir/$addon"
+    url=$(curl -s "https://api.mmoui.com/v3/game/WOW/filedetails/${WoWI[$addon]}.json" | jq '.[0].UIDownload')
+
+    wget -q -O "$addonDir.zip" "${url//\"}"
+    unzip -q "$addonDir.zip" -d "$releasedir"
+	zip_root_dirs+=("${extFolders[$addon]}")
+    rm "$addonDir.zip"
+done
+
+for addon in "${!Wago[@]}"; do
+	echo "$addon";
+	addonDir="$releasedir/$addon"
+
+	curl -s -f \
+      -H "Authorization: Bearer $WAGO_API_KEY" \
+      -H "accept: application/json" \
+      "https://addons.wago.io/api/external/addons/${Wago[$addon]}?game_version=retail" -o "$addonDir.json"
+
+	url=$(jq ".recent_release.stable.download_link" "$addonDir.json")
+	curl -s -f \
+      -H "Authorization: Bearer $WAGO_API_KEY" \
+      -H "accept: application/json" \
+      "${url//\"}" -o "${addonDir}.html"
+
+	download=$(grep -Po "(?<=href=\")[^\"]+" "${addonDir}.html")
+	wget -q -O "$addonDir.zip" "${download//\"}"
+	unzip -q "$addonDir.zip" -d "$releasedir"
+	zip_root_dirs+=("${extFolders[$addon]}")
+	rm "$addonDir.zip"
+done
+
+for addon in "${!GitHub[@]}"; do
+	echo "$addon";
+	addonDir="$releasedir/$addon"
+
+    version=$(curl -s "https://api.github.com/repos/${GitHub[$addon]}/releases/latest" | jq -r '.name')
+    wget -q "https://github.com/${GitHub[$addon]}/releases/download/$version/release.json"
+
+    fileName=
+    while read -r i; do
+        flavor=$(jq -r ".metadata[].flavor" <<< "$i")
+        if [ "$flavor" == "mainline" ]; then
+            fileName=$(jq -r ".filename" <<< "$i")
+        fi
+    done < <(jq -c '.releases[]' release.json)
+
+    wget -q -O "$addonDir.zip" "https://github.com/${GitHub[$addon]}/releases/download/$version/$fileName"
+	unzip -q "$addonDir.zip" -d "$releasedir"
+	zip_root_dirs+=("${extFolders[$addon]}")
+	rm "$addonDir.zip"
+done
+
+###
 ### Process .pkgmeta to perform move-folders actions.
 ###
 
