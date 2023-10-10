@@ -2390,7 +2390,7 @@ fi
 ###
 
 declare -A WoWI=(
-	["Aurora"]=18589
+	# ["Aurora"]=18589
 	["BadBoy"]=8736
 	["BadBoy_CCleaner"]=13526
 	["BadBoy_Guilded"]=16951
@@ -2398,14 +2398,16 @@ declare -A WoWI=(
 	["Masque"]=12097
 	["Raven"]=18242
 )
+
 declare -A Wago=(
-	["Grid2"]="grid2"
+	# ["Grid2"]="grid2"
 )
 declare -A GitHub=(
 	["KNP"]="kesava-wow/kuinameplates2"
+	["Grid2"]="michaelnpsp/Grid2"
 )
 declare -A extFolders=(
-	["Aurora"]="Aurora"
+	# ["Aurora"]="Aurora"
 	["BadBoy"]="BadBoy"
 	["BadBoy_CCleaner"]="BadBoy_CCleaner"
 	["BadBoy_Guilded"]="BadBoy_Guilded"
@@ -2453,9 +2455,8 @@ done
 for addon in "${!GitHub[@]}"; do
 	echo "$addon";
 	addonDir="$releasedir/$addon"
-
     version=$(curl -s "https://api.github.com/repos/${GitHub[$addon]}/releases/latest" | jq -r '.name')
-    wget -q "https://github.com/${GitHub[$addon]}/releases/download/$version/release.json"
+    wget -O release.json -q "https://github.com/${GitHub[$addon]}/releases/download/$version/release.json"
 
     fileName=
     while read -r i; do
@@ -2464,7 +2465,7 @@ for addon in "${!GitHub[@]}"; do
             fileName=$(jq -r ".filename" <<< "$i")
         fi
     done < <(jq -c '.releases[]' release.json)
-
+	rm release.json
     wget -q -O "$addonDir.zip" "https://github.com/${GitHub[$addon]}/releases/download/$version/$fileName"
 	unzip -q "$addonDir.zip" -d "$releasedir"
 	zip_root_dirs+=("${extFolders[$addon]}")
