@@ -2396,14 +2396,14 @@ declare -A WoWI=(
 	["BadBoy_Guilded"]=16951
 	["Bartender4"]=11190
 	["Masque"]=12097
-	["Raven"]=18242
+	#["Raven"]=18242
 )
 
 declare -A Wago=(
 	# ["Grid2"]="grid2"
 )
 declare -A GitHub=(
-	["KNP"]="kesava-wow/kuinameplates2"
+	#["KNP"]="kesava-wow/kuinameplates2"
 	["Grid2"]="michaelnpsp/Grid2"
 )
 declare -A extFolders=(
@@ -2413,9 +2413,9 @@ declare -A extFolders=(
 	["BadBoy_Guilded"]="BadBoy_Guilded"
 	["Bartender4"]="Bartender4"
 	["Grid2"]="Grid2 Grid2LDB Grid2Options Grid2RaidDebuffs Grid2RaidDebuffsOptions"
-	["KNP"]="Kui_Media Kui_Nameplates Kui_Nameplates_Core Kui_Nameplates_Core_Config"
+	#["KNP"]="Kui_Media Kui_Nameplates Kui_Nameplates_Core Kui_Nameplates_Core_Config"
 	["Masque"]="Masque"
-	["Raven"]="Raven Raven_Options"
+	#["Raven"]="Raven Raven_Options"
 )
 
 addonDir=
